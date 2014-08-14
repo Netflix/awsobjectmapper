@@ -1,0 +1,23 @@
+{
+   "healthCheckId" : null,
+   "zone" : {
+      "name" : "x.y.z.",
+      "id" : "Z1Z2Z3Z4Z5X6Z7"
+   },
+   "region" : null,
+   "name" : "w.x.y.z.",
+   "failover" : null,
+   "setIdentifier" : null,
+   "aliasTarget" : null,
+   "geoLocation" : null,
+   "weight" : null,
+   "type" : "CNAME",
+   "resourceRecords" : [
+      {
+         "value" : "ec2-0-0-0-0.compute-1.amazonaws.com",
+         "class" : "com.amazonaws.services.route53.model.ResourceRecord"
+      }
+   ],
+   "TTL" : 60,
+   "class" : "com.amazonaws.services.route53.model.ResourceRecordSet"
+}
