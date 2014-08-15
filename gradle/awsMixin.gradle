@@ -197,7 +197,12 @@ class AwsMixinGenerator implements Plugin<Project> {
   }
 
   void apply(Project project) {
-    project.task('generateAwsMixins') << {
+    Task task = project.task('generateAwsMixins')
+
+    task.getInputs().file("${project.getRootDir()}/gradle/awsMixin.gradle")
+    task.getOutputs().dir("${project.buildDir}/generated/com/netflix/awsobjectmapper")
+
+    task.doLast({
       File outputDir = new File("${project.buildDir}/generated/com/netflix/awsobjectmapper")
       setupDir(outputDir)
 
@@ -231,7 +236,7 @@ class AwsMixinGenerator implements Plugin<Project> {
         createNameForSetterMethod(out, outputDir, overrides)
         out.writeLine("}\n")
       }
-    }
+    })
   }
 
   def mapperHeader = """\
