@@ -46,7 +46,7 @@ subprojects {
     compile 'com.fasterxml.jackson.core:jackson-databind:2.4.1.3'
     testCompile 'junit:junit:4.10'
     testCompile 'com.google.guava:guava:14.0.1'
-    testCompile 'io.github.benas:jpopulator:1.0.1'
+    //testCompile 'io.github.benas:jpopulator:1.0.1'
   }
 
   task copyDepsToBuild << {
