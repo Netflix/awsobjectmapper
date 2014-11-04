@@ -1,6 +1,6 @@
 apply plugin: 'release'
 
-[ uploadIvyLocal: 'uploadLocal', uploadArtifactory: 'artifactoryPublish', buildWithArtifactory: 'build' ].each { key, value ->
+[ uploadIvyLocal: 'uploadLocal', uploadArtifactory: 'artifactoryPublish', buildWithArtifactory: 'build', testWithArtifactory: 'test' ].each { key, value ->
     // Call out to compile against internal repository
     task "${key}"(type: GradleBuild) {
         startParameter = project.gradle.startParameter.newInstance()
