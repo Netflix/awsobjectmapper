@@ -19,7 +19,7 @@ buildscript {
     jcenter()
   }
   dependencies {
-    classpath 'com.amazonaws:aws-java-sdk:1.9.3'
+    classpath 'com.amazonaws:aws-java-sdk:1.9.16'
     classpath 'com.google.guava:guava:14.0.1'
   }
 }
@@ -52,7 +52,8 @@ class AwsMixinGenerator implements Plugin<Project> {
     "setGeneralProgressListener",
     "setRequestCredentials",
     "setRequestMetricCollector",
-    "getDryRunRequest"
+    "getDryRunRequest",
+    "setInvokeArgs"
   ])
 
   private void deleteDir(File dir) {
