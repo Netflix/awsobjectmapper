@@ -193,7 +193,7 @@ class AwsMixinGenerator implements Plugin<Project> {
       new File(dir, "${mixinName}.java").withWriter { w ->
         createMixin(w, prefix, it.load())
       }
-      out.writeLine("    addMixInAnnotations(${it.name}.class, ${mixinName}.class);")
+      out.writeLine("    addMixIn(${it.name}.class, ${mixinName}.class);")
     }
   }
 
