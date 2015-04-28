@@ -26,7 +26,7 @@ task forceRelease {
 release.dependsOn([forceCandidate, forceRelease])
 
 task uploadMavenCentral(dependsOn: subprojects.tasks.uploadMavenCentral)
-task releaseSnapshot(dependsOn: [uploadArtifactory, uploadMavenCentral])
+task releaseSnapshot(dependsOn: [uploadMavenCentral]) //uploadArtifactory, uploadMavenCentral])
 
 // Ensure our versions look like the project status before publishing
 task verifyStatus << {
@@ -39,7 +39,7 @@ uploadArtifactory.dependsOn(verifyStatus)
 uploadMavenCentral.dependsOn(verifyStatus)
 
 // Ensure upload happens before tagging, hence upload failures will leave repo in a revertable state
-preTagCommit.dependsOn([uploadArtifactory, uploadMavenCentral])
+preTagCommit.dependsOn([uploadMavenCentral]) //uploadArtifactory, uploadMavenCentral])
 
 
 gradle.taskGraph.whenReady { taskGraph ->
@@ -49,7 +49,7 @@ gradle.taskGraph.whenReady { taskGraph ->
     if (hasRelease) {
         assert indexOf(build) < indexOf(unSnapshotVersion), 'build target has to be after unSnapshotVersion'
         assert indexOf(uploadMavenCentral) < indexOf(preTagCommit), 'preTagCommit has to be after uploadMavenCentral'
-        assert indexOf(uploadArtifactory) < indexOf(preTagCommit), 'preTagCommit has to be after uploadArtifactory'
+        //assert indexOf(uploadArtifactory) < indexOf(preTagCommit), 'preTagCommit has to be after uploadArtifactory'
     }
 }
 
