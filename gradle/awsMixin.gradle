@@ -19,7 +19,7 @@ buildscript {
     jcenter()
   }
   dependencies {
-    classpath 'com.amazonaws:aws-java-sdk:1.9.16'
+    classpath 'com.amazonaws:aws-java-sdk:1.9.33'
     classpath 'com.google.guava:guava:14.0.1'
   }
 }
@@ -121,7 +121,7 @@ class AwsMixinGenerator implements Plugin<Project> {
     c.methods.each {
       if (it.name.startsWith("get") && methods.contains("is${it.name.substring(3)}")) {
         anno.add("@JsonIgnore Boolean is${it.name.substring(3)}();")
-      } else if (it.name.startsWith("set") && it.parameterTypes.any { cls -> cls.isEnum() }) {
+      } else if (it.name.startsWith("set") && it.parameterTypes.any { cls -> cls.isEnum() || cls.getName().startsWith("java.nio") }) {
         String ptype = it.parameterTypes[0].name;
         anno.add("@JsonIgnore void ${it.name}(${ptype} v);")
         anno.add("@JsonProperty void ${it.name}(String v);")
