@@ -19,7 +19,7 @@ buildscript {
     jcenter()
   }
   dependencies {
-    classpath 'com.amazonaws:aws-java-sdk:1.10.27'
+    classpath 'com.amazonaws:aws-java-sdk:1.10.50'
     classpath 'com.google.guava:guava:18.0'
   }
 }
