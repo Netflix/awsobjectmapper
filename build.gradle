@@ -42,7 +42,7 @@ subprojects {
   }
 
   dependencies {
-    compile 'com.amazonaws:aws-java-sdk:1.10.50'
+    compile 'com.amazonaws:aws-java-sdk:1.10.51'
     compile 'com.fasterxml.jackson.core:jackson-databind:2.5.5'
     testCompile 'junit:junit:4.10'
     testCompile 'com.google.guava:guava:18.0'
