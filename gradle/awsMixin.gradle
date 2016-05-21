@@ -129,6 +129,15 @@ class AwsMixinGenerator implements Plugin<Project> {
         anno.add("@JsonIgnore ${methodString(it)};")
       }
     }
+
+    // Gradle or a core plugin has a dependency on aws-sdk 1.9.19 causing
+    // a problem for kms KeyMetadata. There isn't a clear way to override
+    // that dependency, so for now we manually patch the problem it causes.
+    if ("com.amazonaws.services.kms.model.KeyMetadata".equals(c.name)) {
+      anno.add("@JsonIgnore void setKeyState(com.amazonaws.services.kms.model.KeyState v);")
+      anno.add("@JsonProperty void setKeyState(String v);")
+    }
+
     return anno
   }
 
