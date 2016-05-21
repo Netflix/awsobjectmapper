@@ -1,6 +1,8 @@
 #!/bin/bash
 # This script will build the project.
 
+# https://github.com/Netflix/AWSObjectMapper/issues/16
+export GRADLE_OPTS="-Xmx2g"
 if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then
   echo -e "Assemble Pull Request #$TRAVIS_PULL_REQUEST => Branch [$TRAVIS_BRANCH]"
   ./gradlew assemble
