@@ -14,33 +14,15 @@
  * limitations under the License.
  */
 
-buildscript {
-  repositories {
-    jcenter()
-  }
-  dependencies {
-    classpath 'com.amazonaws:aws-java-sdk:1.11.18'
-    classpath 'com.google.guava:guava:18.0'
-  }
-}
-
-apply plugin: AwsMixinGenerator
-
-import com.amazonaws.services.autoscaling.AmazonAutoScaling
-import com.amazonaws.services.cloudwatch.AmazonCloudWatch
-import com.amazonaws.services.ec2.AmazonEC2
-import com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancing
-import com.amazonaws.services.elasticmapreduce.AmazonElasticMapReduce
-import com.amazonaws.services.route53.AmazonRoute53
-
 import com.google.common.reflect.ClassPath
-import java.io.File
-import java.io.Writer
+import org.gradle.api.Plugin
+import org.gradle.api.Project
+import org.gradle.api.Task
+
 import java.lang.reflect.Method
-import java.util.HashSet
-import java.util.Set
 import java.util.regex.Matcher
 import java.util.regex.Pattern
+
 
 class AwsMixinGenerator implements Plugin<Project> {
 
@@ -130,14 +112,6 @@ class AwsMixinGenerator implements Plugin<Project> {
       }
     }
 
-    // Gradle or a core plugin has a dependency on aws-sdk 1.9.19 causing
-    // a problem for kms KeyMetadata. There isn't a clear way to override
-    // that dependency, so for now we manually patch the problem it causes.
-    if ("com.amazonaws.services.kms.model.KeyMetadata".equals(c.name)) {
-      anno.add("@JsonIgnore void setKeyState(com.amazonaws.services.kms.model.KeyState v);")
-      anno.add("@JsonProperty void setKeyState(String v);")
-    }
-
     return anno
   }
 
@@ -209,7 +183,6 @@ class AwsMixinGenerator implements Plugin<Project> {
   void apply(Project project) {
     Task task = project.task('generateAwsMixins')
 
-    task.getInputs().file("${project.getRootDir()}/gradle/awsMixin.gradle")
     task.getOutputs().dir("${project.buildDir}/generated/com/netflix/awsobjectmapper")
 
     task.doLast({
@@ -220,9 +193,11 @@ class AwsMixinGenerator implements Plugin<Project> {
 
       List<String> overrides = new ArrayList<String>()
 
+      URL[] compileClasspath = project.configurations.getByName('compile').files.collect { it.toURI().toURL() }
+      ClassLoader cl = new URLClassLoader(compileClasspath)
+
       new File(outputDir, "AmazonObjectMapper.java").withWriter { out ->
         out.writeLine(mapperHeader)
-        ClassLoader cl = AmazonEC2.class.classLoader
         String pkg = "com.amazonaws"
         ClassPath.from(cl).getTopLevelClassesRecursive(pkg).each { cinfo ->
           Matcher m = clientPattern.matcher(cinfo.simpleName)
@@ -232,9 +207,14 @@ class AwsMixinGenerator implements Plugin<Project> {
               prefix = "V2$prefix"
             else if (cinfo.name.contains("2012_03_15"))
               prefix = "V2012_03_15$prefix"
-            println(cinfo.name)
-            createMixins(out, outputDir, prefix, cinfo.load())
-            overrides += collectOverrides(cinfo.load())
+            def clientClass = cinfo.load()
+            def jarLoc = { Class clazz ->
+              def path = clazz.protectionDomain?.codeSource?.location?.path ?: "unknown"
+              path.substring(path.lastIndexOf('/') + 1)
+            }
+            println clientClass.name + ": " + jarLoc(clientClass)
+            createMixins(out, outputDir, prefix, clientClass)
+            overrides += collectOverrides(clientClass)
           }
         }
         out.writeLine("  }\n}\n")
