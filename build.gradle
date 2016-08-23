@@ -1,13 +1,12 @@
 
 buildscript {
   repositories {
-    mavenLocal()
     jcenter()
   }
 }
 
 plugins {
-  id 'nebula.netflixoss' version '3.2.3'
+  id 'nebula.netflixoss' version '3.4.0'
 }
 
 // Establish version and status
@@ -38,26 +37,16 @@ subprojects {
   }
 
   dependencies {
-    compile 'com.amazonaws:aws-java-sdk:1.11.18'
-    compile 'com.fasterxml.jackson.core:jackson-databind:2.5.5'
+    compile 'com.amazonaws:aws-java-sdk:1.11.28'
+    compile 'com.fasterxml.jackson.core:jackson-databind:2.6.6'
     testCompile 'junit:junit:4.10'
     testCompile 'com.google.guava:guava:18.0'
     testCompile 'io.github.benas:jpopulator:1.0.1'
   }
-
-  task copyDepsToBuild << {
-    ['compile', 'runtime', 'testCompile', 'testRuntime'].each { conf ->
-      delete "${buildDir}/dependencies/${conf}"
-      copy {
-        from configurations[conf]
-        into "${buildDir}/dependencies/${conf}"
-      }
-    }
-  }
 }
 
 project(':awsobjectmapper') {
-  apply from: file('../gradle/awsMixin.gradle')
+  apply plugin: AwsMixinGenerator
 
   compileJava.dependsOn generateAwsMixins
 
