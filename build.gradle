@@ -7,6 +7,7 @@ buildscript {
 
 plugins {
   id 'nebula.netflixoss' version '3.4.0'
+  id 'nebula.provided-base' version '3.1.0'
 }
 
 // Establish version and status
@@ -14,6 +15,7 @@ ext.githubProjectName = 'awsobjectmapper'
 
 allprojects {
   apply plugin: 'nebula.netflixoss'
+  apply plugin: 'nebula.provided-base'
   apply plugin: 'java'
   apply plugin: 'idea'
 }
@@ -37,7 +39,7 @@ subprojects {
   }
 
   dependencies {
-    compile 'com.amazonaws:aws-java-sdk:1.11.28'
+    provided 'com.amazonaws:aws-java-sdk:1.11.28'
     compile 'com.fasterxml.jackson.core:jackson-databind:2.6.6'
     testCompile 'junit:junit:4.10'
     testCompile 'com.google.guava:guava:18.0'
