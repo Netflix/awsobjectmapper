@@ -15,7 +15,8 @@
  */
 package com.netflix.awsobjectmapper;
 
-import com.google.common.collect.ImmutableSet;
+import com.amazonaws.services.ecs.model.VersionInfo;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.reflect.ClassPath;
 import com.google.common.io.Resources;
 
@@ -63,7 +64,8 @@ public class AmazonObjectMapperTest {
 
   @Test
   public void mapRandomAwsObjects() throws Exception {
-    final AmazonObjectMapper mapper = new AmazonObjectMapper();
+    final ObjectMapper mapper = new ObjectMapper();
+    AmazonObjectMapperConfigurer.configure(mapper);
     final Populator p = (new PopulatorBuilder()).build();
     final Set<ClassPath.ClassInfo> classes = ClassPath
         .from(getClass().getClassLoader())
@@ -72,7 +74,6 @@ public class AmazonObjectMapperTest {
       if (cinfo.getName().contains(".model.")
           && !cinfo.getSimpleName().startsWith("GetConsole")
           && !cinfo.getName().contains(".s3.model.")) { // TODO: problem with CORSRule
-        System.out.println(cinfo.getName());
         final Class<?> c = cinfo.load();
         if (isModelClass(c)) {
           Object obj = p.populateBean(c);
@@ -80,15 +81,27 @@ public class AmazonObjectMapperTest {
           Object d1 = mapper.readValue(j1, c);
           String j2 = mapper.writeValueAsString(d1);
           Assert.assertEquals(j1, j2);
-          //System.out.println(c.getName() + " => " + obj);
         }
       }
     }
   }
 
   @Test
-  public void namingStrategy() throws Exception {
+  @SuppressWarnings("deprecation")
+  public void testDeprecatedMapper() throws Exception {
     final AmazonObjectMapper mapper = new AmazonObjectMapper();
+    final Populator p = new PopulatorBuilder().build();
+    Object obj = p.populateBean(VersionInfo.class);
+    String j1 = mapper.writeValueAsString(obj);
+    Object d1 = mapper.readValue(j1, VersionInfo.class);
+    String j2 = mapper.writeValueAsString(d1);
+    Assert.assertEquals(j1, j2);
+  }
+
+  @Test
+  public void namingStrategy() throws Exception {
+    final ObjectMapper mapper = new ObjectMapper();
+    AmazonObjectMapperConfigurer.configure(mapper);
     byte[] json = Resources.toByteArray(Resources.getResource("recordSet.json"));
     ResourceRecordSet recordSet = mapper.readValue(json, ResourceRecordSet.class);
     Assert.assertEquals(60L, (long) recordSet.getTTL());
