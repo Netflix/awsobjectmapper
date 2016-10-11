@@ -176,7 +176,7 @@ class AwsMixinGenerator implements Plugin<Project> {
       new File(dir, "${mixinName}.java").withWriter { w ->
         createMixin(w, prefix, it.load())
       }
-      out.writeLine("    addMixIn(${it.name}.class, ${mixinName}.class);")
+      out.writeLine("    objectMapper.addMixIn(${it.name}.class, ${mixinName}.class);")
     }
   }
 
@@ -196,8 +196,8 @@ class AwsMixinGenerator implements Plugin<Project> {
       URL[] compileClasspath = project.configurations.getByName('compile').files.collect { it.toURI().toURL() }
       ClassLoader cl = new URLClassLoader(compileClasspath)
 
-      new File(outputDir, "AmazonObjectMapper.java").withWriter { out ->
-        out.writeLine(mapperHeader)
+      new File(outputDir, "AmazonObjectMapperConfigurer.java").withWriter { out ->
+        out.writeLine(mapperConfigurerHeader)
         String pkg = "com.amazonaws"
         ClassPath.from(cl).getTopLevelClassesRecursive(pkg).each { cinfo ->
           Matcher m = clientPattern.matcher(cinfo.simpleName)
@@ -226,6 +226,9 @@ class AwsMixinGenerator implements Plugin<Project> {
         createNameForSetterMethod(out, outputDir, overrides)
         out.writeLine("}\n")
       }
+      new File(outputDir, "AmazonObjectMapper.java").withWriter { out ->
+        out.writeLine(mapper);
+      }
     })
   }
 
@@ -247,25 +250,30 @@ class AwsMixinGenerator implements Plugin<Project> {
  */
 """
 
-  def mapperHeader = """\
+  def mapperConfigurerHeader = """\
 $licenseHeader
 package com.netflix.awsobjectmapper;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
-public class AmazonObjectMapper extends ObjectMapper {
-  public AmazonObjectMapper() {
-    configure(MapperFeature.AUTO_DETECT_IS_GETTERS, false);
-    configure(SerializationFeature.INDENT_OUTPUT, true);
-    configure(SerializationFeature.WRITE_NULL_MAP_VALUES, false);
-    configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-    configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-    setPropertyNamingStrategy(new AmazonNamingStrategy());
+public class AmazonObjectMapperConfigurer {
+
+  public static ObjectMapper createConfigured() {
+    ObjectMapper objectMapper = new ObjectMapper();
+    configure(objectMapper);
+    return objectMapper;
+  }
+
+  public static void configure(ObjectMapper objectMapper) {
+    objectMapper.configure(MapperFeature.AUTO_DETECT_IS_GETTERS, false);
+    objectMapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+    objectMapper.configure(SerializationFeature.WRITE_NULL_MAP_VALUES, false);
+    objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+    objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    objectMapper.setPropertyNamingStrategy(new AmazonNamingStrategy());
 """
 
   def mixinHeader = """\
@@ -287,5 +295,25 @@ import com.fasterxml.jackson.databind.introspect.AnnotatedField;
 import com.fasterxml.jackson.databind.introspect.AnnotatedMethod;
 
 class AmazonNamingStrategy extends PropertyNamingStrategy {
+"""
+
+  def mapper = """\
+$licenseHeader
+
+package com.netflix.awsobjectmapper;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+/**
+ * AmazonObjectMapper.
+ *
+ * @deprecated Use AmazonObjectMapperConfigurer and supply an ObjectMapper
+ */
+@Deprecated
+public class AmazonObjectMapper extends ObjectMapper {
+  public AmazonObjectMapper() {
+    AmazonObjectMapperConfigurer.configure(this);
+  }
+}
 """
 }
