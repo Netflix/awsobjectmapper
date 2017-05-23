@@ -6,8 +6,8 @@ buildscript {
 }
 
 plugins {
-  id 'nebula.netflixoss' version '3.4.0'
-  id 'nebula.resolution-rules' version '2.0.0'
+  id 'nebula.netflixoss' version '3.6.0'
+  id 'nebula.resolution-rules' version '2.5.10'
 }
 
 // Establish version and status
@@ -39,9 +39,9 @@ subprojects {
   }
 
   dependencies {
-    resolutionRules 'com.netflix.nebula:gradle-resolution-rules:0.32.1'
-    compile 'com.amazonaws:aws-java-sdk:1.11.104'
-    compile 'com.fasterxml.jackson.core:jackson-databind:2.8.3'
+    resolutionRules 'com.netflix.nebula:gradle-resolution-rules:0.48.0'
+    compile 'com.amazonaws:aws-java-sdk:1.11.133'
+    compile 'com.fasterxml.jackson.core:jackson-databind:2.8.7'
     testCompile 'junit:junit:4.10'
     testCompile 'com.google.guava:guava:18.0'
     testCompile 'io.github.benas:jpopulator:1.0.1'
