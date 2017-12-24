@@ -153,7 +153,7 @@ ${methodsToAnnotate(c).collect { "  $it" }.join("\n")}
     def pkg = "${baseClass.package.name}.model"
     def cl = baseClass.classLoader
     def classes = ClassPath.from(cl).getTopLevelClasses(pkg)
-    matches.each {
+    classes.each {
       if (!isModelClass(it.load())) return
       String mixinName = "$prefix${it.simpleName}Mixin"
       new File(dir, "${mixinName}.java").withWriter { w ->
