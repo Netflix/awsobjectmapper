@@ -26,7 +26,7 @@ import java.util.regex.Pattern
 
 class AwsMixinGenerator implements Plugin<Project> {
 
-  private final Set<String> prohibited = new HashSet<String>([
+  private final Set<String> prohibited = [
     "getGeneralProgressListener",
     "getRequestClientOptions",
     "getRequestCredentials",
@@ -36,24 +36,15 @@ class AwsMixinGenerator implements Plugin<Project> {
     "setRequestMetricCollector",
     "getDryRunRequest",
     "setInvokeArgs"
-  ])
-
-  private void deleteDir(File dir) {
-    if (dir.exists()) {
-      dir.listFiles().each {
-        if (it.isDirectory()) deleteDir(it) else it.delete()
-      }
-      dir.delete()
-    }
-  }
+  ]
 
   private void setupDir(File dir) {
-    deleteDir(dir)
+    dir.deleteDir()
     dir.mkdirs()
   }
 
   private boolean isModelClass(Class<?> c) {
-    boolean skip = false
+    def skip = false
 
     // Skip package and exception classes
     skip = c.simpleName == "package-info" || c.simpleName.endsWith("Exception")
@@ -62,17 +53,17 @@ class AwsMixinGenerator implements Plugin<Project> {
     skip = skip || c.isInterface()
 
     // Must have an empty constructor
-    skip = skip || !c.constructors.any { it.parameterTypes.length == 0 }
+    skip = skip || c.constructors.every { it.parameterTypes.length }
 
     // Must have methods to annotate
-    skip = skip || methodsToAnnotate(c).isEmpty()
+    skip = skip || !methodsToAnnotate(c)
 
     return !skip
   }
 
   // Don't camel case if starts with multiple uppercase
   private List<String> fieldsToOverride(Class<?> c) {
-    List<String> overrides = new ArrayList<String>()
+    def overrides = new ArrayList<String>()
     c.methods.each {
       if (it.name.startsWith("get")) {
         String field = it.name.substring(3)
@@ -83,28 +74,24 @@ class AwsMixinGenerator implements Plugin<Project> {
   }
 
   private String methodString(Method m) {
-    String params = ""
-    int i = 0
-    m.parameterTypes.each { t ->
-      params += ", ${t.name} p$i"
-      i++
-    }
-    params = (params.length() == 0) ? params : params.substring(2)
-    return "public ${m.returnType.name} ${m.name}($params)"
+    def params = m.parameterTypes.withIndex().collect { it, i ->
+      "$it.name p$i"
+    }.join(", ")
+    if (params) params = params.substring(2)
+    return "public $m.returnType.name $m.name($params)"
   }
 
   // Rules:
   // 1. getFoo should be ignored if isFoo is present
   // 2. setFoo(FooEnum) should be ignored, use setFoo(String s)
   private List<String> methodsToAnnotate(Class<?> c) {
-    List<String> anno = new ArrayList<String>()
-    Set<String> methods = new HashSet<String>()
-    c.methods.each { methods.add(it.name) }
+    def anno = new ArrayList<String>()
+    def methods = c.methods*.name.toSet()
     c.methods.each {
       if (it.name.startsWith("get") && methods.contains("is${it.name.substring(3)}")) {
         anno.add("@JsonIgnore Boolean is${it.name.substring(3)}();")
-      } else if (it.name.startsWith("set") && it.parameterTypes.any { cls -> cls.isEnum() || cls.getName().startsWith("java.nio") }) {
-        String ptype = it.parameterTypes[0].name;
+      } else if (it.name.startsWith("set") && it.parameterTypes.any { cls -> cls.isEnum() || cls.name.startsWith("java.nio") }) {
+        String ptype = it.parameterTypes[0].name
         anno.add("@JsonIgnore void ${it.name}(${ptype} v);")
         anno.add("@JsonProperty void ${it.name}(String v);")
       } else if (prohibited.contains(it.name)) {
@@ -116,63 +103,59 @@ class AwsMixinGenerator implements Plugin<Project> {
   }
 
   private void createNameForField(Writer out, File dir, List<String> overrides) {
-    out.writeLine("  @Override")
-    out.writeLine("  public String nameForField(MapperConfig c, AnnotatedField f, String s) {")
-    overrides.unique().each {
-      String m = it.substring(0, 1).toLowerCase() + it.substring(1)
-      out.writeLine("    if (\"${m}\".equals(f.getName())) return \"${it}\";")
-    }
-    out.writeLine("    return super.nameForField(c, f, s);")
-    out.writeLine("  }")
+    out << """\
+  @Override
+  public String nameForField(MapperConfig c, AnnotatedField f, String s) {
+${overrides.toSet().collect { "    if (\"${it.uncapitalize()}\".equals(f.getName())) return \"$it\";" }.join("\n")}
+    return super.nameForField(c, f, s);
+  }
+"""
   }
 
   private void createNameForGetterMethod(Writer out, File dir, List<String> overrides) {
-    out.writeLine("  @Override")
-    out.writeLine("  public String nameForGetterMethod(MapperConfig c, AnnotatedMethod m, String s) {")
-    overrides.unique().each {
-      out.writeLine("    if (\"get${it}\".equals(m.getName())) return \"${it}\";")
-    }
-    out.writeLine("    return super.nameForGetterMethod(c, m, s);")
-    out.writeLine("  }")
+    out << """\
+  @Override
+  public String nameForGetterMethod(MapperConfig c, AnnotatedMethod m, String s) {
+${overrides.toSet().collect { "    if (\"get$it\".equals(m.getName())) return \"$it\";" }.join("\n")}
+    return super.nameForGetterMethod(c, m, s);
+  }
+"""
   }
 
   private void createNameForSetterMethod(Writer out, File dir, List<String> overrides) {
-    out.writeLine("  @Override")
-    out.writeLine("  public String nameForSetterMethod(MapperConfig c, AnnotatedMethod m, String s) {")
-    overrides.unique().each {
-      out.writeLine("    if (\"set${it}\".equals(m.getName())) return \"${it}\";")
-    }
-    out.writeLine("    return super.nameForSetterMethod(c, m, s);")
-    out.writeLine("  }")
+    out << """\
+  @Override
+  public String nameForSetterMethod(MapperConfig c, AnnotatedMethod m, String s) {
+${overrides.toSet().collect { "    if (\"set$it\".equals(m.getName())) return \"$it\";" }.join("\n")}
+    return super.nameForSetterMethod(c, m, s);
+  }
+"""
   }
 
   private List<String> collectOverrides(Class<?> baseClass) {
-    String pkg = "${baseClass.package.name}.model"
-    ClassLoader cl = baseClass.classLoader
-    Set<Class<?>> classes = ClassPath.from(cl).getTopLevelClasses(pkg)
-    List<String> overrides = new ArrayList<String>()
-    classes.each {
-      overrides += fieldsToOverride(it.load())
-    }
-    return overrides
+    def pkg = "${baseClass.package.name}.model"
+    def cl = baseClass.classLoader
+    def classes = ClassPath.from(cl).getTopLevelClasses(pkg)
+    def overrides = new ArrayList<String>()
+    return classes.collectMany { fieldsToOverride(it.load()) }
   }
 
   private void createMixin(Writer out, String prefix, Class<?> c) {
-    out.writeLine(mixinHeader)
-    out.writeLine("interface ${prefix}${c.simpleName}Mixin {")
-    methodsToAnnotate(c).each {
-      out.writeLine("  ${it}")
-    }
-    out.writeLine("}")
+    out << """\
+$mixinHeader
+interface $prefix${c.simpleName}Mixin {
+${methodsToAnnotate(c).collect { "  $it" }.join("\n")}
+}
+"""
   }
 
   private void createMixins(Writer out, File dir, String prefix, Class<?> baseClass) {
-    String pkg = "${baseClass.package.name}.model"
-    ClassLoader cl = baseClass.classLoader
-    Set<Class<?>> classes = ClassPath.from(cl).getTopLevelClasses(pkg)
-    Set<Class<?>> matches = classes.findAll { isModelClass(it.load()) }
-    matches.each {
-      String mixinName = "${prefix}${it.simpleName}Mixin"
+    def pkg = "${baseClass.package.name}.model"
+    def cl = baseClass.classLoader
+    def classes = ClassPath.from(cl).getTopLevelClasses(pkg)
+    classes.each {
+      if (!isModelClass(it.load())) return
+      String mixinName = "$prefix${it.simpleName}Mixin"
       new File(dir, "${mixinName}.java").withWriter { w ->
         createMixin(w, prefix, it.load())
       }
@@ -183,17 +166,17 @@ class AwsMixinGenerator implements Plugin<Project> {
   void apply(Project project) {
     Task task = project.task('generateAwsMixins')
 
-    task.getOutputs().dir("${project.buildDir}/generated/com/netflix/awsobjectmapper")
+    task.outputs.dir("${project.buildDir}/generated/com/netflix/awsobjectmapper")
 
-    task.doLast({
+    task.doLast {
       File outputDir = new File("${project.buildDir}/generated/com/netflix/awsobjectmapper")
       setupDir(outputDir)
 
-      Pattern clientPattern = Pattern.compile('^([A-Za-z0-9]+)Client$');
+      Pattern clientPattern = ~/^([A-Za-z0-9]+)Client$/
 
       List<String> overrides = new ArrayList<String>()
 
-      URL[] compileClasspath = project.configurations.getByName('compile').files.collect { it.toURI().toURL() }
+      URL[] compileClasspath = project.configurations.getByName('compile').files*.toURI()*.toURL()
       ClassLoader cl = new URLClassLoader(compileClasspath)
 
       new File(outputDir, "AmazonObjectMapperConfigurer.java").withWriter { out ->
@@ -201,8 +184,8 @@ class AwsMixinGenerator implements Plugin<Project> {
         String pkg = "com.amazonaws"
         ClassPath.from(cl).getTopLevelClassesRecursive(pkg).each { cinfo ->
           Matcher m = clientPattern.matcher(cinfo.simpleName)
-          if (!cinfo.simpleName.endsWith("AsyncClient") && m.matches()) {
-            String prefix = m.group(1);
+          if (!cinfo.simpleName.endsWith("AsyncClient") && m) {
+            String prefix = m.group(1)
             if (cinfo.name.contains("v2"))
               prefix = "V2$prefix"
             else if (cinfo.name.contains("2012_03_15"))
@@ -227,9 +210,9 @@ class AwsMixinGenerator implements Plugin<Project> {
         out.writeLine("}\n")
       }
       new File(outputDir, "AmazonObjectMapper.java").withWriter { out ->
-        out.writeLine(mapper);
+        out.writeLine(mapper)
       }
-    })
+    }
   }
 
   def licenseHeader = """\
