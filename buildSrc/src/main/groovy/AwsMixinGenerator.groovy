@@ -154,7 +154,7 @@ ${methodsToAnnotate(c).collect { "  $it" }.join("\n")}
     def cl = baseClass.classLoader
     def classes = ClassPath.from(cl).getTopLevelClasses(pkg)
     matches.each {
-      if (!isModelClass(it.load()) return
+      if (!isModelClass(it.load())) return
       String mixinName = "$prefix${it.simpleName}Mixin"
       new File(dir, "${mixinName}.java").withWriter { w ->
         createMixin(w, prefix, it.load())
