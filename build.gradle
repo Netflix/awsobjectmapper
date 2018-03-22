@@ -40,7 +40,7 @@ subprojects {
 
   dependencies {
     resolutionRules 'com.netflix.nebula:gradle-resolution-rules:0.48.0'
-    compile 'com.amazonaws:aws-java-sdk:1.11.277'
+    compile 'com.amazonaws:aws-java-sdk:1.11.299'
     compile 'com.fasterxml.jackson.core:jackson-databind:2.9.4'
     testCompile 'junit:junit:4.10'
     testCompile 'com.google.guava:guava:18.0'
