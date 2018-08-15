@@ -6,15 +6,13 @@ buildscript {
 }
 
 plugins {
-  id 'nebula.netflixoss' version '3.6.0'
-  id 'nebula.resolution-rules' version '2.5.10'
+  id 'nebula.netflixoss' version '5.2.0'
 }
 
 // Establish version and status
 ext.githubProjectName = 'awsobjectmapper'
 
 allprojects {
-  apply plugin: 'nebula.resolution-rules'
   apply plugin: 'nebula.netflixoss'
   apply plugin: 'java'
   apply plugin: 'idea'
@@ -39,7 +37,6 @@ subprojects {
   }
 
   dependencies {
-    resolutionRules 'com.netflix.nebula:gradle-resolution-rules:0.48.0'
     compile 'com.amazonaws:aws-java-sdk:1.11.387'
     compile 'com.fasterxml.jackson.core:jackson-databind:2.9.6'
     testCompile 'junit:junit:4.10'
