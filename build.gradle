@@ -37,8 +37,8 @@ subprojects {
   }
 
   dependencies {
-    compile 'com.amazonaws:aws-java-sdk:1.11.409'
-    compile 'com.fasterxml.jackson.core:jackson-databind:2.9.6'
+    compile 'com.amazonaws:aws-java-sdk:1.11.435'
+    compile 'com.fasterxml.jackson.core:jackson-databind:2.9.7'
     testCompile 'junit:junit:4.10'
     testCompile 'com.google.guava:guava:18.0'
     testCompile 'io.github.benas:jpopulator:1.0.1'
