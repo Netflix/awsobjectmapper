@@ -45,7 +45,7 @@ subprojects {
     compile 'com.fasterxml.jackson.core:jackson-databind:2.9.8'
     testCompile 'junit:junit:4.10'
     testCompile 'com.google.guava:guava:18.0'
-    testCompile 'io.github.benas:jpopulator:1.0.1'
+    testCompile 'org.jeasy:easy-random-core:4.0.0'
   }
 }
 
