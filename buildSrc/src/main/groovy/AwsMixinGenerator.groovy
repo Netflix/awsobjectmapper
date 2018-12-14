@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2016 Netflix, Inc.
+ * Copyright 2014-2018 Netflix, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -157,13 +157,19 @@ class AwsMixinGenerator implements Plugin<Project> {
     return overrides
   }
 
-  private void createMixin(Writer out, String prefix, Class<?> c) {
-    out.writeLine(mixinHeader)
-    out.writeLine("interface ${prefix}${c.simpleName}Mixin {")
-    methodsToAnnotate(c).each {
-      out.writeLine("  ${it}")
+  private boolean createMixin(File f, String prefix, Class<?> c) {
+    List<String> annotated = methodsToAnnotate(c)
+    if (!annotated.isEmpty()) {
+      f.withWriter { out ->
+        out.writeLine(mixinHeader)
+        out.writeLine("interface ${prefix}${c.simpleName}Mixin {")
+        methodsToAnnotate(c).each {
+          out.writeLine("  ${it}")
+        }
+        out.writeLine("}")
+      }
     }
-    out.writeLine("}")
+    !annotated.isEmpty()
   }
 
   private void createMixins(Writer out, File dir, String prefix, Class<?> baseClass) {
@@ -173,10 +179,10 @@ class AwsMixinGenerator implements Plugin<Project> {
     Set<Class<?>> matches = classes.findAll { isModelClass(it.load()) }
     matches.each {
       String mixinName = "${prefix}${it.simpleName}Mixin"
-      new File(dir, "${mixinName}.java").withWriter { w ->
-        createMixin(w, prefix, it.load())
+      File f = new File(dir, "${mixinName}.java")
+      if (createMixin(f, prefix, it.load())) {
+        out.writeLine("    objectMapper.addMixIn(${it.name}.class, ${mixinName}.class);")
       }
-      out.writeLine("    objectMapper.addMixIn(${it.name}.class, ${mixinName}.class);")
     }
   }
 
@@ -189,7 +195,16 @@ class AwsMixinGenerator implements Plugin<Project> {
       File outputDir = new File("${project.buildDir}/generated/com/netflix/awsobjectmapper")
       setupDir(outputDir)
 
-      Pattern clientPattern = Pattern.compile('^([A-Za-z0-9]+)Client$');
+      Pattern clientPattern = Pattern.compile('^([A-Za-z0-9]+)Client$')
+
+      // Ignore a number of services that we do not use at Netflix and generate a lot of mixins
+      // to avoid compilation error due to the size of the method:
+      //
+      // generated/com/netflix/awsobjectmapper/AmazonObjectMapperConfigurer.java:32: error: code too large
+      //  public static void configure(ObjectMapper objectMapper) {
+      //                     ^
+      Pattern ignorePattern = Pattern.compile(
+          "services\\.(iot|lightsail|pinpoint(email)?|greengrass|gamelift|alexaforbusiness|cloudformation)\\.")
 
       List<String> overrides = new ArrayList<String>()
 
@@ -201,7 +216,7 @@ class AwsMixinGenerator implements Plugin<Project> {
         String pkg = "com.amazonaws"
         ClassPath.from(cl).getTopLevelClassesRecursive(pkg).each { cinfo ->
           Matcher m = clientPattern.matcher(cinfo.simpleName)
-          if (!cinfo.simpleName.endsWith("AsyncClient") && m.matches()) {
+          if (!cinfo.simpleName.endsWith("AsyncClient") && m.matches() && !ignorePattern.matcher(cinfo.name).find()) {
             String prefix = m.group(1);
             if (cinfo.name.contains("v2"))
               prefix = "V2$prefix"
@@ -234,7 +249,7 @@ class AwsMixinGenerator implements Plugin<Project> {
 
   def licenseHeader = """\
 /*
- * Copyright 2014-2016 Netflix, Inc.
+ * Copyright 2014-2018 Netflix, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
