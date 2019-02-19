@@ -6,7 +6,7 @@ buildscript {
 }
 
 plugins {
-  id 'nebula.netflixoss' version '6.0.1'
+  id 'nebula.netflixoss' version '7.1.0'
 }
 
 // Establish version and status
@@ -34,6 +34,10 @@ subprojects {
     options {
       links = ['http://docs.oracle.com/javase/8/docs/api/']
     }
+  }
+
+  test {
+    maxHeapSize = '4G'
   }
 
   dependencies {
