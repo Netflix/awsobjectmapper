@@ -36,6 +36,10 @@ subprojects {
     }
   }
 
+  test {
+    maxHeapSize = '4G'
+  }
+
   dependencies {
     compile 'com.amazonaws:aws-java-sdk:1.11.482'
     compile 'com.fasterxml.jackson.core:jackson-databind:2.9.8'
