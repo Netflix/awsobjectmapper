@@ -96,6 +96,7 @@ class AwsMixinGenerator implements Plugin<Project> {
   // Rules:
   // 1. getFoo should be ignored if isFoo is present
   // 2. setFoo(FooEnum) should be ignored, use setFoo(String s)
+  // 3. Deprecated methods should be ignored
   private List<String> methodsToAnnotate(Class<?> c) {
     List<String> anno = new ArrayList<String>()
     Set<String> methods = new HashSet<String>()
@@ -107,6 +108,8 @@ class AwsMixinGenerator implements Plugin<Project> {
         String ptype = it.parameterTypes[0].name;
         anno.add("@JsonIgnore void ${it.name}(${ptype} v);")
         anno.add("@JsonProperty void ${it.name}(String v);")
+      } else if (it.name.startsWith("get") && it.getAnnotation(Deprecated.class) != null) {
+        anno.add("@JsonIgnore ${methodString(it)};")
       } else if (prohibited.contains(it.name)) {
         anno.add("@JsonIgnore ${methodString(it)};")
       }
