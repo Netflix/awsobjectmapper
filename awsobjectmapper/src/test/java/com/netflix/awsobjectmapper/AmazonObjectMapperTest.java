@@ -20,12 +20,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.reflect.ClassPath;
 import com.google.common.io.Resources;
 
-import io.github.benas.jpopulator.api.Populator;
-import io.github.benas.jpopulator.impl.PopulatorBuilder;
+import org.jeasy.random.EasyRandom;
+import org.jeasy.random.EasyRandomParameters;
 
 import com.amazonaws.services.route53.model.ResourceRecordSet;
 
+import java.lang.reflect.Field;
 import java.util.Set;
+import java.util.function.Predicate;
+
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -66,7 +69,12 @@ public class AmazonObjectMapperTest {
   public void mapRandomAwsObjects() throws Exception {
     final ObjectMapper mapper = new ObjectMapper();
     AmazonObjectMapperConfigurer.configure(mapper);
-    final Populator p = (new PopulatorBuilder()).build();
+    final EasyRandomParameters parameters = new EasyRandomParameters()
+            .ignoreRandomizationErrors(true)
+            .excludeField(excludedFields())
+            .excludeType(excludedTypes())
+            .collectionSizeRange(1, 3);
+    final EasyRandom easyRandom = new EasyRandom(parameters);
     final Set<ClassPath.ClassInfo> classes = ClassPath
         .from(getClass().getClassLoader())
         .getTopLevelClassesRecursive("com.amazonaws");
@@ -76,7 +84,7 @@ public class AmazonObjectMapperTest {
           && !cinfo.getName().contains(".s3.model.")) { // TODO: problem with CORSRule
         final Class<?> c = cinfo.load();
         if (isModelClass(c)) {
-          Object obj = p.populateBean(c);
+          Object obj = easyRandom.nextObject(c);
           String j1 = mapper.writeValueAsString(obj);
           Object d1 = mapper.readValue(j1, c);
           String j2 = mapper.writeValueAsString(d1);
@@ -86,12 +94,25 @@ public class AmazonObjectMapperTest {
     }
   }
 
+  private Predicate<Field> excludedFields() {
+    return field -> field.getType().equals(com.amazonaws.ResponseMetadata.class) ||
+           field.getType().equals(com.amazonaws.http.SdkHttpMetadata.class);
+  }
+
+  private Predicate<Class<?>> excludedTypes() {
+    return type -> type.getSuperclass().equals(com.amazonaws.AmazonWebServiceRequest.class) ||
+            type.equals(com.amazonaws.services.elasticmapreduce.model.Cluster.class) ||
+            type.equals(com.amazonaws.services.elasticmapreduce.model.Configuration.class) ||
+            type.equals(com.amazonaws.services.kinesisvideo.model.AckEvent.class) ||
+            type.equals(com.amazonaws.services.simplesystemsmanagement.model.InventoryAggregator.class);
+  }
+
   @Test
   @SuppressWarnings("deprecation")
   public void testDeprecatedMapper() throws Exception {
     final AmazonObjectMapper mapper = new AmazonObjectMapper();
-    final Populator p = new PopulatorBuilder().build();
-    Object obj = p.populateBean(VersionInfo.class);
+    final EasyRandom easyRandom = new EasyRandom();
+    Object obj = easyRandom.nextObject(VersionInfo.class);
     String j1 = mapper.writeValueAsString(obj);
     Object d1 = mapper.readValue(j1, VersionInfo.class);
     String j2 = mapper.writeValueAsString(d1);
