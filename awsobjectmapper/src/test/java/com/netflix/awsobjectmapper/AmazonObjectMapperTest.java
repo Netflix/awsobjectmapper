@@ -101,9 +101,6 @@ public class AmazonObjectMapperTest {
 
   private Predicate<Class<?>> excludedTypes() {
     return type -> type.getSuperclass().equals(com.amazonaws.AmazonWebServiceRequest.class) ||
-            type.equals(com.amazonaws.services.elasticmapreduce.model.Cluster.class) ||
-            type.equals(com.amazonaws.services.elasticmapreduce.model.Configuration.class) ||
-            type.equals(com.amazonaws.services.kinesisvideo.model.AckEvent.class) ||
             type.equals(com.amazonaws.services.simplesystemsmanagement.model.InventoryAggregator.class);
   }
 
