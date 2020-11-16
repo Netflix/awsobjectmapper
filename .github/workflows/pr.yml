@@ -27,4 +27,6 @@ jobs:
             ~/.gradle/wrapper
           key: ${{ runner.os }}-gradlewrapper-${{ hashFiles('gradle/wrapper/*') }}
       - name: Build
-        run: ./gradlew build
+        run: |
+          ./gradlew assemble
+          ./gradlew build
