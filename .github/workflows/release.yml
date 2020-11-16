@@ -32,4 +32,6 @@ jobs:
         run: ./gradlew -Psonatype.username=${{ secrets.ORG_SONATYPE_USERNAME }} -Psonatype.password=${{ secrets.ORG_SONATYPE_PASSWORD }} -Pbintray.user=${{ secrets.ORG_BINTRAY_USER }} -Pbintray.apiKey=${{ secrets.ORG_BINTRAY_KEY }} -Prelease.travisci=true -Prelease.useLastTag=true candidate
       - name: Build release
         if: (!contains(github.ref, '-rc.'))
-        run: ./gradlew -Psonatype.username=${{ secrets.ORG_SONATYPE_USERNAME }} -Psonatype.password=${{ secrets.ORG_SONATYPE_PASSWORD }} -Pbintray.user=${{ secrets.ORG_BINTRAY_USER }} -Pbintray.apiKey=${{ secrets.ORG_BINTRAY_KEY }} -Prelease.travisci=true -Prelease.useLastTag=true final
+        run: |
+          ./gradlew -Prelease.travisci=true -Prelease.useLastTag=true assemble
+          ./gradlew -Psonatype.username=${{ secrets.ORG_SONATYPE_USERNAME }} -Psonatype.password=${{ secrets.ORG_SONATYPE_PASSWORD }} -Pbintray.user=${{ secrets.ORG_BINTRAY_USER }} -Pbintray.apiKey=${{ secrets.ORG_BINTRAY_KEY }} -Prelease.travisci=true -Prelease.useLastTag=true final
