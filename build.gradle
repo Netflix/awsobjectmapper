@@ -35,7 +35,7 @@ subprojects {
   }
 
   ext {
-    awsSdkVersion = '1.12.84'
+    awsSdkVersion = '1.12.100'
   }
 
   dependencies {
