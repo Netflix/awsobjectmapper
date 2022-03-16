@@ -63,7 +63,7 @@ subprojects {
     compile "com.amazonaws:aws-java-sdk-sts:${awsSdkVersion}"
     compile "com.amazonaws:aws-java-sdk-support:${awsSdkVersion}"
     compile "com.amazonaws:aws-java-sdk-xray:${awsSdkVersion}"
-    compile 'com.fasterxml.jackson.core:jackson-databind:2.12.3'
+    compile 'com.fasterxml.jackson.core:jackson-databind:2.12.6'
     testCompile 'junit:junit:4.10'
     testCompile 'com.google.guava:guava:18.0'
     testCompile 'org.jeasy:easy-random-core:4.0.0'
