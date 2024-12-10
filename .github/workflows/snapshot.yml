@@ -10,20 +10,21 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
+      - uses: actions/checkout@v4
+      - run: |
+          git config --global user.name "Netflix OSS Maintainers"
+          git config --global user.email "netflixoss@netflix.com"
       - name: Set up JDK
         uses: actions/setup-java@v1
         with:
           java-version: 8
-      - uses: actions/cache@v2
+      - uses: actions/cache@v4
         id: gradle-cache
         with:
           path: |
             ~/.gradle/caches
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
-      - uses: actions/cache@v2
+      - uses: actions/cache@v4
         id: gradle-wrapper-cache
         with:
           path: |
