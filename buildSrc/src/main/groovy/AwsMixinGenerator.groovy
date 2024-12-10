@@ -211,7 +211,7 @@ class AwsMixinGenerator implements Plugin<Project> {
 
       List<String> overrides = new ArrayList<String>()
 
-      URL[] compileClasspath = project.configurations.getByName('compile').files.collect { it.toURI().toURL() }
+      URL[] compileClasspath = project.configurations.getByName('compileClasspath').files.collect { it.toURI().toURL() }
       ClassLoader cl = new URLClassLoader(compileClasspath)
 
       new File(outputDir, "AmazonObjectMapperConfigurer.java").withWriter { out ->

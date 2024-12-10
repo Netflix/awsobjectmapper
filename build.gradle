@@ -1,6 +1,6 @@
 
 plugins {
-  id 'nebula.netflixoss' version '9.1.0'
+  id 'com.netflix.nebula.netflixoss' version '11.5.0'
 }
 
 // Establish version and status
@@ -8,7 +8,7 @@ ext.githubProjectName = 'awsobjectmapper'
 
 allprojects {
   apply plugin: 'nebula.netflixoss'
-  apply plugin: 'java'
+  apply plugin: 'java-library'
   apply plugin: 'idea'
 }
 
@@ -39,34 +39,34 @@ subprojects {
   }
 
   dependencies {
-    compile "com.amazonaws:aws-java-sdk-autoscaling:${awsSdkVersion}"
-    compile "com.amazonaws:aws-java-sdk-cloudwatch:${awsSdkVersion}"
-    compile "com.amazonaws:aws-java-sdk-config:${awsSdkVersion}"
-    compile "com.amazonaws:aws-java-sdk-core:${awsSdkVersion}"
-    compile "com.amazonaws:aws-java-sdk-dynamodb:${awsSdkVersion}"
-    compile "com.amazonaws:aws-java-sdk-ec2:${awsSdkVersion}"
-    compile "com.amazonaws:aws-java-sdk-ecs:${awsSdkVersion}"
-    compile "com.amazonaws:aws-java-sdk-efs:${awsSdkVersion}"
-    compile "com.amazonaws:aws-java-sdk-elasticache:${awsSdkVersion}"
-    compile "com.amazonaws:aws-java-sdk-elasticloadbalancing:${awsSdkVersion}"
-    compile "com.amazonaws:aws-java-sdk-elasticloadbalancingv2:${awsSdkVersion}"
-    compile "com.amazonaws:aws-java-sdk-elasticsearch:${awsSdkVersion}"
-    compile "com.amazonaws:aws-java-sdk-iam:${awsSdkVersion}"
-    compile "com.amazonaws:aws-java-sdk-lambda:${awsSdkVersion}"
-    compile "com.amazonaws:aws-java-sdk-rds:${awsSdkVersion}"
-    compile "com.amazonaws:aws-java-sdk-route53:${awsSdkVersion}"
-    compile "com.amazonaws:aws-java-sdk-s3:${awsSdkVersion}"
-    compile "com.amazonaws:aws-java-sdk-ses:${awsSdkVersion}"
-    compile "com.amazonaws:aws-java-sdk-sns:${awsSdkVersion}"
-    compile "com.amazonaws:aws-java-sdk-sqs:${awsSdkVersion}"
-    compile "com.amazonaws:aws-java-sdk-ssm:${awsSdkVersion}"
-    compile "com.amazonaws:aws-java-sdk-sts:${awsSdkVersion}"
-    compile "com.amazonaws:aws-java-sdk-support:${awsSdkVersion}"
-    compile "com.amazonaws:aws-java-sdk-xray:${awsSdkVersion}"
-    compile 'com.fasterxml.jackson.core:jackson-databind:2.12.6'
-    testCompile 'junit:junit:4.10'
-    testCompile 'com.google.guava:guava:18.0'
-    testCompile 'org.jeasy:easy-random-core:4.0.0'
+    api "com.amazonaws:aws-java-sdk-autoscaling:${awsSdkVersion}"
+    api "com.amazonaws:aws-java-sdk-cloudwatch:${awsSdkVersion}"
+    api "com.amazonaws:aws-java-sdk-config:${awsSdkVersion}"
+    api "com.amazonaws:aws-java-sdk-core:${awsSdkVersion}"
+    api "com.amazonaws:aws-java-sdk-dynamodb:${awsSdkVersion}"
+    api "com.amazonaws:aws-java-sdk-ec2:${awsSdkVersion}"
+    api "com.amazonaws:aws-java-sdk-ecs:${awsSdkVersion}"
+    api "com.amazonaws:aws-java-sdk-efs:${awsSdkVersion}"
+    api "com.amazonaws:aws-java-sdk-elasticache:${awsSdkVersion}"
+    api "com.amazonaws:aws-java-sdk-elasticloadbalancing:${awsSdkVersion}"
+    api "com.amazonaws:aws-java-sdk-elasticloadbalancingv2:${awsSdkVersion}"
+    api "com.amazonaws:aws-java-sdk-elasticsearch:${awsSdkVersion}"
+    api "com.amazonaws:aws-java-sdk-iam:${awsSdkVersion}"
+    api "com.amazonaws:aws-java-sdk-lambda:${awsSdkVersion}"
+    api "com.amazonaws:aws-java-sdk-rds:${awsSdkVersion}"
+    api "com.amazonaws:aws-java-sdk-route53:${awsSdkVersion}"
+    api "com.amazonaws:aws-java-sdk-s3:${awsSdkVersion}"
+    api "com.amazonaws:aws-java-sdk-ses:${awsSdkVersion}"
+    api "com.amazonaws:aws-java-sdk-sns:${awsSdkVersion}"
+    api "com.amazonaws:aws-java-sdk-sqs:${awsSdkVersion}"
+    api "com.amazonaws:aws-java-sdk-ssm:${awsSdkVersion}"
+    api "com.amazonaws:aws-java-sdk-sts:${awsSdkVersion}"
+    api "com.amazonaws:aws-java-sdk-support:${awsSdkVersion}"
+    api "com.amazonaws:aws-java-sdk-xray:${awsSdkVersion}"
+    api 'com.fasterxml.jackson.core:jackson-databind:2.12.6'
+    testImplementation 'junit:junit:4.10'
+    testImplementation 'com.google.guava:guava:18.0'
+    testImplementation 'org.jeasy:easy-random-core:4.0.0'
   }
 }
 
@@ -74,6 +74,8 @@ project(':awsobjectmapper') {
   apply plugin: AwsMixinGenerator
 
   compileJava.dependsOn generateAwsMixins
+  sourcesJar.dependsOn tasks.withType(JavaCompile), generateAwsMixins
+  licenseMain.dependsOn tasks.withType(JavaCompile), generateAwsMixins
 
   sourceSets {
     main {
