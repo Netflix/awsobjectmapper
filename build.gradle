@@ -75,6 +75,8 @@ project(':awsobjectmapper') {
 
   compileJava.dependsOn generateAwsMixins
   sourcesJar.dependsOn tasks.withType(JavaCompile), generateAwsMixins
+  javadoc.dependsOn tasks.withType(JavaCompile), generateAwsMixins
+  javadocJar.dependsOn tasks.withType(JavaCompile), generateAwsMixins
   licenseMain.dependsOn tasks.withType(JavaCompile), generateAwsMixins
 
   sourceSets {
