@@ -1,0 +1,2 @@
+// Test file for injection
+println "CANARY_MARKER_HB_GRADLE_INJECTION"
